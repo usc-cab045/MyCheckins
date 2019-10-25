@@ -1,5 +1,6 @@
 package android.bignerdranch.com;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
@@ -10,6 +11,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -19,11 +21,13 @@ import android.content.Intent;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.location.Location;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,6 +35,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.location.Location;
 
 import java.io.File;
 import java.util.Date;
@@ -44,11 +49,18 @@ public class RecordFragment extends Fragment {
     private EditText mDetails;
     private ImageButton mPhotoButton;
     private ImageView mPhotoView;
+    private Button mDeleteButton;
     private File mPhotoFile;
+    private Button mShareButton;
     private static final String ARG_RECORD_ID = "record_id";
     private static final String DIALOG_DATE = "DialogDate";
     private static final int REQUEST_DATE = 0;
-    private static final int REQUEST_PHOTO= 2;
+    private static final int REQUEST_PHOTO = 2;
+    private static final String[] LOCATION_PERMISSIONS = new String[]{
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+    };
+    private static final int REQUEST_LOCATION_PERMISSIONS = 0;
 
 
     public static RecordFragment newInstance(UUID recordId) {
@@ -58,6 +70,7 @@ public class RecordFragment extends Fragment {
         fragment.setArguments(args);
         return fragment;
     }
+
     private void updatePhotoView() {
         if (mPhotoFile == null || !mPhotoFile.exists()) {
             mPhotoView.setImageDrawable(null);
@@ -67,7 +80,7 @@ public class RecordFragment extends Fragment {
             mPhotoView.setImageBitmap(bitmap);
         }
     }
-
+    
 
 
     @Override
@@ -86,11 +99,13 @@ public class RecordFragment extends Fragment {
                     CharSequence s, int start, int count, int after) {
                 // This space intentionally left blank
             }
+
             @Override
             public void onTextChanged(
                     CharSequence s, int start, int before, int count) {
                 mRecord.setPlace(s.toString());
             }
+
             @Override
             public void afterTextChanged(Editable s) {
                 // This one too
@@ -102,15 +117,18 @@ public class RecordFragment extends Fragment {
                     CharSequence s, int start, int count, int after) {
                 // This space intentionally left blank
             }
+
             @Override
             public void onTextChanged(
                     CharSequence s, int start, int before, int count) {
                 mRecord.setTitle(s.toString());
             }
+
             @Override
             public void afterTextChanged(Editable s) {
                 // This one too
             }
+
         });
         mDetails.addTextChangedListener(new TextWatcher() {
             @Override
@@ -118,11 +136,13 @@ public class RecordFragment extends Fragment {
                     CharSequence s, int start, int count, int after) {
                 // This space intentionally left blank
             }
+
             @Override
             public void onTextChanged(
                     CharSequence s, int start, int before, int count) {
                 mRecord.setDetails(s.toString());
             }
+
             @Override
             public void afterTextChanged(Editable s) {
                 // This one too
@@ -138,7 +158,8 @@ public class RecordFragment extends Fragment {
                         .newInstance(mRecord.getDate());
                 dialog.setTargetFragment(RecordFragment.this, REQUEST_DATE);
                 dialog.show(manager, DIALOG_DATE);
-            } });
+            }
+        });
         mPhotoButton = (ImageButton) v.findViewById(R.id.record_camera);
         final Intent captureImage = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         PackageManager packageManager = getActivity().getPackageManager();
@@ -157,27 +178,41 @@ public class RecordFragment extends Fragment {
                                 PackageManager.MATCH_DEFAULT_ONLY);
                 for (ResolveInfo activity : cameraActivities) {
                     getActivity().grantUriPermission(activity.activityInfo.packageName,
-                uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);}
+                            uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                }
                 startActivityForResult(captureImage, REQUEST_PHOTO);
             }
         });
 
         mPhotoView = (ImageView) v.findViewById(R.id.record_photo);
         updatePhotoView();
+        mDeleteButton = (Button) v.findViewById(R.id.delete_button);
+        mDeleteButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (RecordLab.get(getActivity()).deleteRecord(mRecord.getId()) > 0) {
+                    getActivity().finish();
+                }
+            }
+        });
+
         return v;
-    }
+        }
 
     private void updateDate() {
         mDateButton.setText(mRecord.getDate().toString());
     }
 
-    private EditText mTitleField;{
+    private EditText mTitleField;
+
+    {
 
     }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode != Activity.RESULT_OK) {
-            return; }
+            return;
+        }
         if (requestCode == REQUEST_DATE) {
             Date date = (Date) data
                     .getSerializableExtra(DatePickerFragment.EXTRA_DATE);
@@ -192,33 +227,21 @@ public class RecordFragment extends Fragment {
             updatePhotoView();
         }
     }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         UUID recordId = (UUID) getArguments().getSerializable(ARG_RECORD_ID);
         mRecord = RecordLab.get(getActivity()).getRecord(recordId);
         mPhotoFile = RecordLab.get(getActivity()).getPhotoFile(mRecord);
-        LocationRequest.create();
-        LocationRequest request = LocationRequest.create();
-        request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        request.setNumUpdates(1);
-        request.setInterval(0);
-        if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED){
-            return;
-        }
-        LocationServices.FusedLocationApi.requestLocationUpdates(mRecord, request, new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-                mRecord.set
-            }
-        })
 
     }
+
     @Override
     public void onPause() {
         super.onPause();
         RecordLab.get(getActivity())
                 .updateRecord(mRecord);
     }
+
 }

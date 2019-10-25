@@ -27,11 +27,12 @@ public class RecordLab {
         mContext = context.getApplicationContext();
         mDatabase = new RecordBaseHelper(mContext)
                 .getWritableDatabase();
-
-
-
     }
-    public void addRecord(Record r) {
+    public int deleteRecord (UUID recordId) {
+        String uuidString = recordId.toString();
+        return (mDatabase.delete(RecordDbSchema.RecordTable.NAME, RecordDbSchema.RecordTable.Cols.UUID + " = ?", new String[]{uuidString}));
+    }
+        public void addRecord(Record r) {
         ContentValues values = getContentValues(r);
         mDatabase.insert(RecordDbSchema.RecordTable.NAME, null, values);
 
@@ -98,5 +99,7 @@ public class RecordLab {
         values.put(RecordDbSchema.RecordTable.Cols.PLACE, record.getPlace());
         return values;
     }
-    }
+
+
+}
 

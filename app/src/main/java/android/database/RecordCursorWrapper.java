@@ -21,8 +21,7 @@ public class RecordCursorWrapper extends CursorWrapper {
         record.setDate(new Date(date));
         record.setDetails(details);
         record.setPlace(place);
-        record.setLat(lat);
-        record.setLong(lon);
+
         return record;
     }
 }

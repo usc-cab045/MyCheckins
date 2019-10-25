@@ -9,6 +9,7 @@ public class RecordDbSchema {
             public static final String DATE = "date";
             public static final String DETAILS = "details";
             public static final String PLACE = "place";
+
         }
     }
 }

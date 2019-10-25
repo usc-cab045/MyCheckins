@@ -52,6 +52,7 @@ public class Record {
     public Record() {
         this(UUID.randomUUID());
     }
+
     public Record(UUID id) {
         mId = id;
         mDate = new Date();
@@ -59,22 +60,22 @@ public class Record {
     public String getPhotoFilename() {
         return "IMG_" + getId().toString() + ".jpg";
     }
-    private float mLat;
+    private double mLat;
 
-    public void setLat(float lat) {
+    public void setLat(double lat) {
         mLat = lat;
     }
-    public float getLat(){
+    public double getLat(){
         return mLat;
     }
 
-    private float mLon;
+    private double mLon;
 
-    public void setLong(float aLon) {
+    public void setLong(double aLon) {
         mLon = aLon;
     }
 
-    public float getLon() {
+    public double getLon() {
         return mLon;
     }
 }

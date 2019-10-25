@@ -8,6 +8,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
 import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
@@ -55,6 +56,10 @@ public class RecordListFragment extends Fragment {
                 Intent intent = RecordPagerActivity
                         .newIntent(getActivity(), record.getId());
                 startActivity(intent);
+                return true;
+            case R.id.help_button:
+                Intent helpintent = new Intent(getActivity(), WebActivity.class);
+                startActivity(helpintent);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

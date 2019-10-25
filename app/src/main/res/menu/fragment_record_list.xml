@@ -6,7 +6,7 @@
         android:title="New"
         app:showAsAction="ifRoom|withText" />
     <item
-        android:id="@+id/new_record"
+        android:id="@+id/help_button"
         android:title="Help"
         app:showAsAction="ifRoom|withText" />
 </menu>
