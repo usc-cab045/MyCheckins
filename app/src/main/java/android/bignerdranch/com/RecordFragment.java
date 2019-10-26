@@ -80,7 +80,7 @@ public class RecordFragment extends Fragment {
             mPhotoView.setImageBitmap(bitmap);
         }
     }
-    
+
 
 
     @Override
@@ -192,6 +192,17 @@ public class RecordFragment extends Fragment {
                 if (RecordLab.get(getActivity()).deleteRecord(mRecord.getId()) > 0) {
                     getActivity().finish();
                 }
+            }
+        });
+        mShareButton = (Button)v.findViewById(R.id.share_button);
+        mShareButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent myIntent = new Intent(Intent.ACTION_SEND);
+                myIntent.setType("text/plain");
+                String shareInfo =  mRecord.getTitle() + ", " + System.getProperty("line.separator") + mRecord.getDate() + ", " + System.getProperty("line.separator")+ mRecord.getPlace() + ", " + System.getProperty("line.separator") +  mRecord.getDetails();
+                myIntent.putExtra(Intent.EXTRA_TEXT, shareInfo);
+                startActivity(Intent.createChooser(myIntent, "Share using"));
             }
         });
 
